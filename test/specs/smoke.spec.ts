@@ -11,6 +11,10 @@ import { SamplePage } from '../pages/SamplePage';
 describe('Smoke suite', () => {
   const page = new SamplePage();
 
+  before(async () => {
+    await page.skipOnboarding();
+  });
+
   it('launches on the home screen', async () => {
     expect(await page.isHomeDisplayed()).toBe(true);
   });
