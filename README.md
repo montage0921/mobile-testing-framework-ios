@@ -1,93 +1,117 @@
-# Mobile Testing
+# Mobile Test Framework (Android emulator + Perfecto)
 
+Starter framework for the Mobile Test Automation upskilling program.
+One test suite runs on a **local Android emulator** and on **Perfecto cloud devices**.
 
+**Stack:** TypeScript, Appium (UiAutomator2), WebdriverIO, Mocha, Page Object Model, Perfecto, Git.
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## How it works
 
 ```
-cd existing_repo
-git remote add origin https://git.fdmgroup.com/Apurv.Agarwal/mobile-testing.git
-git branch -M main
-git push -uf origin main
+config/                              Where to run (one file per target)
+  env.ts                             Reads .env, fails clearly when a value is missing
+  wdio.shared.conf.ts                Settings shared by every run, screenshot on failure
+  wdio.android.local.conf.ts         Android emulator + local Appium server
+  wdio.android.perfecto.conf.ts      Perfecto cloud device
+test/
+  pages/BasePage.ts                  Shared actions + per-platform locator helper
+  pages/SamplePage.ts                Example page object (replace with your app's screens)
+  specs/smoke.spec.ts                Tests that call page methods only
+scripts/uploadApp.ts                 Uploads an .apk to the Perfecto repository
+apps/                                Your app files (git-ignored)
 ```
 
-## Integrate with your tools
+The key idea: **tests never mention where they run.** Page objects own the locators, and the
+config file decides the target. Moving from the emulator to Perfecto changes one command, not the tests.
 
-* [Set up project integrations](https://git.fdmgroup.com/Apurv.Agarwal/mobile-testing/-/settings/integrations)
+## Prerequisites
 
-## Collaborate with your team
+| Need | For |
+| --- | --- |
+| Node.js 18+, Git, Visual Studio Code | everything |
+| Android Studio with an Android Virtual Device (AVD) and `ANDROID_HOME` set | local emulator runs |
+| A Perfecto cloud name and security token | Perfecto runs |
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## Setup
 
-## Test and Deploy
+```bash
+npm install
+cp .env.example .env          # Windows: copy .env.example .env
+npm run typecheck             # should finish with no errors
+```
 
-Use the built-in continuous integration in GitLab.
+### Run on the local Android emulator
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+```bash
+npm run appium:driver         # one time: installs the UiAutomator2 driver
+# start your emulator (or set ANDROID_AVD in .env). Put the .apk in apps/
+npm run test:local
+```
 
-***
+### Run on Perfecto
 
-# Editing this README
+1. In `.env` set `PERFECTO_CLOUD_NAME` and `PERFECTO_SECURITY_TOKEN`
+   (Perfecto UI > profile menu > My Profile > Security Token).
+2. Upload the app and note the repository key it prints:
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+   ```bash
+   npm run upload -- apps/WikipediaSample.apk
+   ```
 
-## Suggestions for a good README
+3. Set `PERFECTO_ANDROID_APP` to that key (for example `PRIVATE:WikipediaSample.apk`).
+4. Optionally set `PERFECTO_DEVICE_NAME` to a regular expression such as `Pixel.*`.
+5. Run:
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+   ```bash
+   npm run test:perfecto
+   ```
 
-## Name
-Choose a self-explaining name for your project.
+Open the Perfecto **Report Library** to see video, logs and screenshots for the run.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## Adding a screen and a test
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+1. Inspect the screen with Appium Inspector and note the locators.
+2. Create a page object extending `BasePage`:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```ts
+import { BasePage, PlatformLocator } from './BasePage';
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+export class LoginPage extends BasePage {
+  private readonly username: PlatformLocator = { android: '~username' };
+  private readonly submit: PlatformLocator = { android: '~login' };
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+  async login(user: string): Promise<void> {
+    await this.enterText(this.username, user);
+    await this.tap(this.submit);
+  }
+}
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+3. Write a spec in `test/specs/` that calls page methods only.
+4. Run it on the emulator first, then on Perfecto.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## Locator priority
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+1. Accessibility ID (`~name`). Ask developers to add `contentDescription` values.
+2. `android=new UiSelector().resourceId("pkg:id/name")`
+3. Visible text, if stable
+4. XPath, as a last resort (slow and brittle)
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## Troubleshooting
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+| Symptom | Likely cause |
+| --- | --- |
+| `Missing environment variable ...` | `.env` missing or not filled in |
+| Local run cannot connect | Emulator not running, driver not installed, port 4723 in use |
+| Perfecto 401 or authentication error | Wrong cloud name or security token |
+| Perfecto cannot find the app | Repository key in `.env` does not match what the upload printed |
+| Perfecto cannot allocate a device | `PERFECTO_DEVICE_NAME` regex matches no available device; widen it to `.*` |
+| Element not found | Re-inspect on the device that ran; the app version or screen may differ |
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## Status of this starter
 
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project was written and syntax-checked but **not executed** against a live emulator or Perfecto
+cloud. Confirm on first use:
+- The `SamplePage.ts` locators (Day 3 exercise).
+- The Perfecto capabilities in `config/wdio.android.perfecto.conf.ts`. If your Perfecto cloud
+  expects different capability names or a different port or protocol, change them there.
