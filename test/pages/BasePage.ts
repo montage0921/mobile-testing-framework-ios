@@ -55,4 +55,16 @@ export abstract class BasePage {
       () => false,
     );
   }
+
+  /** Tap an element only if it appears, e.g. a one-time popup. Returns whether it was tapped. */
+  protected async tapIfShown(locator: PlatformLocator, timeoutMs = 3000): Promise<boolean> {
+    if (!(await this.isShown(locator, timeoutMs))) return false;
+    await this.tap(locator);
+    return true;
+  }
+
+  /** Press the Enter key on the keyboard. */
+  protected async pressEnter(): Promise<void> {
+    await browser.pressKeyCode(66); // Android KEYCODE_ENTER
+  }
 }

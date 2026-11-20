@@ -15,8 +15,11 @@ config/                              Where to run (one file per target)
   wdio.android.perfecto.conf.ts      Perfecto cloud device
 test/
   pages/BasePage.ts                  Shared actions + per-platform locator helper
-  pages/SamplePage.ts                Example page object (replace with your app's screens)
-  specs/smoke.spec.ts                Tests that call page methods only
+  pages/*.ts                         One page object per screen (Home, Search, Settings, Places,
+                                     PermissionDialog)
+  specs/*.spec.ts                    Tests that call page methods and helpers only
+  support/testData.ts                Typed test data
+  support/gestures.ts                Swipe, scroll, keyboard, background and rotation helpers
 scripts/uploadApp.ts                 Uploads an .apk to the Perfecto repository
 apps/                                Your app files (git-ignored)
 ```
@@ -112,6 +115,6 @@ export class LoginPage extends BasePage {
 
 This project was written and syntax-checked but **not executed** against a live emulator or Perfecto
 cloud. Confirm on first use:
-- The `SamplePage.ts` locators (Day 3 exercise).
+- The page object locators (Day 3 exercise).
 - The Perfecto capabilities in `config/wdio.android.perfecto.conf.ts`. If your Perfecto cloud
   expects different capability names or a different port or protocol, change them there.

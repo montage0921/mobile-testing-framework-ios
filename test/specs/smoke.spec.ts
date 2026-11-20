@@ -1,5 +1,7 @@
 import { expect } from '@wdio/globals';
-import { SamplePage } from '../pages/SamplePage';
+import { HomePage } from '../pages/HomePage';
+import { SearchPage } from '../pages/SearchPage';
+import { smokeSearch } from '../support/testData';
 
 /**
  * The same spec runs on both targets. It never mentions where it runs:
@@ -9,19 +11,20 @@ import { SamplePage } from '../pages/SamplePage';
  *   npm run test:perfecto   Perfecto cloud device
  */
 describe('Smoke suite', () => {
-  const page = new SamplePage();
+  const home = new HomePage();
+  const search = new SearchPage();
 
   before(async () => {
-    await page.skipOnboarding();
+    await home.skipOnboarding();
   });
 
   it('launches on the home screen', async () => {
-    expect(await page.isHomeDisplayed()).toBe(true);
+    expect(await home.isHomeDisplayed()).toBe(true);
   });
 
   it('shows a matching result after a search', async () => {
-    await page.search('Appium');
-    const title = await page.firstResultTitle();
-    expect(title.toLowerCase()).toContain('appium');
+    await home.openSearch();
+    await search.search(smokeSearch.query);
+    expect((await search.firstResultTitle()).toLowerCase()).toContain(smokeSearch.expectedTitle);
   });
 });
