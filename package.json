@@ -12,7 +12,9 @@
     "appium:driver": "appium driver install uiautomator2",
     "upload": "tsx scripts/uploadApp.ts",
     "test:local": "wdio run config/wdio.android.local.conf.ts",
-    "test:perfecto": "wdio run config/wdio.android.perfecto.conf.ts"
+    "test:perfecto": "wdio run config/wdio.android.perfecto.conf.ts",
+    "test:android": "...their existing command...",
+    "test:ios": "wdio run ./wdio.ios.conf.ts"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.0",
