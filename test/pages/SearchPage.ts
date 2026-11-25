@@ -33,7 +33,7 @@ export class SearchPage extends BasePage {
     const input = await this.find(this.searchInput);
     await input.waitForDisplayed();
     await input.clearValue();
-    await this.pressEnter();
+    await this.pressEnter(this.searchInput);
   }
 
   async currentQuery(): Promise<string> {

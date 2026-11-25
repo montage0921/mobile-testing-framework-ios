@@ -2,14 +2,17 @@ import { $, browser } from '@wdio/globals';
 
 /**
  * A locator per platform. Android is the training focus, so `ios` is optional.
- * If you later add iOS, supply the iOS value here and the same page object works.
+ * Supply the iOS value (from Appium Inspector on the iOS app) and the same page object works.
  *
  * Locator strategies (WebdriverIO selector syntax):
  *   Accessibility ID            '~Search Wikipedia'
  *   Android UiSelector          'android=new UiSelector().resourceId("pkg:id/name")'
  *   Android UiSelector (text)   'android=new UiSelector().text("Done")'
+ *   iOS predicate string        '-ios predicate string:type == "XCUIElementTypeButton" AND label == "Done"'
+ *   iOS class chain             '-ios class chain:**\/XCUIElementTypeSearchField'
  *
- * Prefer accessibility IDs (contentDescription on Android): they are stable and readable.
+ * Prefer accessibility IDs (contentDescription on Android, accessibilityIdentifier or label on iOS):
+ * they are stable and readable.
  */
 export interface PlatformLocator {
   android: string;
@@ -63,8 +66,13 @@ export abstract class BasePage {
     return true;
   }
 
-  /** Press the Enter key on the keyboard. */
-  protected async pressEnter(): Promise<void> {
-    await browser.pressKeyCode(66); // Android KEYCODE_ENTER
+  /** Press the Enter key on the keyboard while `locator` (a text field) has focus. */
+  protected async pressEnter(locator: PlatformLocator): Promise<void> {
+    if (browser.isAndroid) {
+      await browser.pressKeyCode(66); // Android KEYCODE_ENTER
+      return;
+    }
+    // iOS has no key codes: typing a newline into the field presses Return.
+    await (await this.find(locator)).addValue('\n');
   }
 }

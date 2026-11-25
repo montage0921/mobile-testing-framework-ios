@@ -1,9 +1,9 @@
-# Mobile Test Framework (Android emulator + Perfecto)
+# Mobile Test Framework (Android emulator + Perfecto + iOS Simulator)
 
 Starter framework for the Mobile Test Automation upskilling program.
-One test suite runs on a **local Android emulator** and on **Perfecto cloud devices**.
+One test suite runs on a **local Android emulator**, on **Perfecto cloud devices**, and on a **local iOS Simulator**.
 
-**Stack:** TypeScript, Appium (UiAutomator2), WebdriverIO, Mocha, Page Object Model, Perfecto, Git.
+**Stack:** TypeScript, Appium (UiAutomator2, XCUITest), WebdriverIO, Mocha, Page Object Model, Perfecto, Git.
 
 ## How it works
 
@@ -13,6 +13,7 @@ config/                              Where to run (one file per target)
   wdio.shared.conf.ts                Settings shared by every run, screenshot on failure
   wdio.android.local.conf.ts         Android emulator + local Appium server
   wdio.android.perfecto.conf.ts      Perfecto cloud device
+  wdio.ios.conf.ts                   iOS Simulator + local Appium server (macOS only)
 test/
   pages/BasePage.ts                  Shared actions + per-platform locator helper
   pages/*.ts                         One page object per screen (Home, Search, Settings, Places,
@@ -34,6 +35,7 @@ config file decides the target. Moving from the emulator to Perfecto changes one
 | Node.js 18+, Git, Visual Studio Code | everything |
 | Android Studio with an Android Virtual Device (AVD) and `ANDROID_HOME` set | local emulator runs |
 | A Perfecto cloud name and security token | Perfecto runs |
+| A Mac with Xcode and an iOS Simulator runtime | iOS runs |
 
 ## Setup
 
@@ -50,6 +52,18 @@ npm run appium:driver         # one time: installs the UiAutomator2 driver
 # start your emulator (or set ANDROID_AVD in .env). Put the .apk in apps/
 npm run test:local
 ```
+
+### Run on the iOS Simulator (macOS only)
+
+```bash
+npm run appium:driver:ios     # one time: installs the XCUITest driver
+# put the simulator build (Wikipedia.app) in apps/ and set IOS_* in .env
+npm run test:ios
+```
+
+The first run builds WebDriverAgent and can take several minutes.
+Page objects need an `ios` locator for every element a test uses; a missing one fails with
+"This locator has no iOS value". Find them with Appium Inspector on the iOS app.
 
 ### Run on Perfecto
 
@@ -96,7 +110,7 @@ export class LoginPage extends BasePage {
 ## Locator priority
 
 1. Accessibility ID (`~name`). Ask developers to add `contentDescription` values.
-2. `android=new UiSelector().resourceId("pkg:id/name")`
+2. Android: `android=new UiSelector().resourceId("pkg:id/name")`. iOS: `-ios predicate string:...` or `-ios class chain:...`
 3. Visible text, if stable
 4. XPath, as a last resort (slow and brittle)
 
@@ -109,6 +123,8 @@ export class LoginPage extends BasePage {
 | Perfecto 401 or authentication error | Wrong cloud name or security token |
 | Perfecto cannot find the app | Repository key in `.env` does not match what the upload printed |
 | Perfecto cannot allocate a device | `PERFECTO_DEVICE_NAME` regex matches no available device; widen it to `.*` |
+| iOS run hangs or fails at session start | WebDriverAgent build failed: open Xcode once, accept the license, check `IOS_DEVICE_NAME` / `IOS_PLATFORM_VERSION` match `xcrun simctl list devices` |
+| `This locator has no iOS value` | Add the `ios` locator to that page object |
 | Element not found | Re-inspect on the device that ran; the app version or screen may differ |
 
 ## Status of this starter

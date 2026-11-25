@@ -2,17 +2,22 @@ import { browser } from '@wdio/globals';
 
 /**
  * Reusable mobile interactions: swipes, scrolling, keyboard, app state and rotation.
- * Android (UiAutomator2) implementations.
+ * Android (UiAutomator2) and iOS (XCUITest), except scrollToTextSelector which is Android only.
  */
 
 export type SwipeDirection = 'up' | 'down' | 'left' | 'right';
 export type Orientation = 'PORTRAIT' | 'LANDSCAPE';
 
 /**
- * Swipe across the middle of the screen with UiAutomator2's `mobile: swipeGesture`.
+ * Swipe across the middle of the screen with UiAutomator2's `mobile: swipeGesture`
+ * (XCUITest's `mobile: swipe` on iOS; it has no distance setting, so `percent` is ignored).
  * The direction is the finger's direction: 'up' moves the content up and reveals what is below.
  */
 export async function swipe(direction: SwipeDirection, percent = 0.6): Promise<void> {
+  if (browser.isIOS) {
+    await browser.execute('mobile: swipe', { direction });
+    return;
+  }
   const { width, height } = await browser.getWindowSize();
   await browser.execute('mobile: swipeGesture', {
     left: Math.round(width * 0.1),
@@ -54,7 +59,7 @@ export async function hideKeyboard(): Promise<void> {
   }
 }
 
-/** Put the app in the background for `seconds`, then Android brings it back. */
+/** Put the app in the background for `seconds`, then the OS brings it back. */
 export async function sendAppToBackground(seconds: number): Promise<void> {
   await browser.execute('mobile: backgroundApp', { seconds });
 }

@@ -1,15 +1,18 @@
 import { BasePage, PlatformLocator } from './BasePage';
 
 /**
- * Android's system permission prompt. It belongs to the OS (permission controller), not the app,
- * so the resource ids match any package.
+ * The system permission prompt. It belongs to the OS (Android permission controller, iOS system
+ * alert), not the app, so these locators work for any app.
  */
 export class PermissionDialog extends BasePage {
   private readonly message: PlatformLocator = {
     android: 'android=new UiSelector().resourceIdMatches(".*:id/permission_message")',
+    // The alert title, e.g. Allow "Wikipedia" to use your location?
+    ios: '-ios class chain:**/XCUIElementTypeAlert/**/XCUIElementTypeStaticText',
   };
   private readonly allowWhileUsingApp: PlatformLocator = {
     android: 'android=new UiSelector().resourceIdMatches(".*:id/permission_allow_foreground_only_button")',
+    ios: '~Allow While Using App',
   };
 
   async isDisplayed(): Promise<boolean> {

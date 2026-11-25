@@ -4,7 +4,7 @@ import { PermissionDialog } from '../pages/PermissionDialog';
 import { PlacesPage } from '../pages/PlacesPage';
 import { locationPromptText } from '../support/testData';
 
-/** Needs appium:autoGrantPermissions off (see config/wdio.android.local.conf.ts). */
+/** Needs appium:autoGrantPermissions (Android) and appium:autoAcceptAlerts (iOS) off; see config/. */
 describe('Permissions', () => {
   const home = new HomePage();
   const permission = new PermissionDialog();
