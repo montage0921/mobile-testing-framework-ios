@@ -1,6 +1,11 @@
 import { browser } from '@wdio/globals';
 import { BasePage, PlatformLocator } from './BasePage';
 
+/** iOS class chain for a button in the bottom tab bar that matches `predicate`. */
+function iosTab(predicate: string): string {
+  return `-ios class chain:**/XCUIElementTypeTabBar/**/XCUIElementTypeButton[\`${predicate}\`]`;
+}
+
 /**
  * Home screen of the open-source Wikipedia app (the training app): first-launch onboarding,
  * the home screen, and the navigation that leads to the other screens.
@@ -25,9 +30,19 @@ export class HomePage extends BasePage {
   // iOS: a Year in Review sheet can cover the tab bar right after launch.
   private readonly yearInReviewClose: PlatformLocator = { ios: '~Year in Review Close Button' };
 
-  // Bottom navigation. The "Home" tab identifies the home screen.
-  private readonly homeTab: PlatformLocator = { android: '~Home', ios: '~Root Tab Home Button' };
-  private readonly searchTab: PlatformLocator = { android: '~Search', ios: '~Search Tab Button' };
+  // Bottom navigation. The first tab identifies the home screen.
+  // iOS: the app randomly gets one of two tab bar layouts per install (seen in CI, same build):
+  //   A) "Explore" tab, buttons with ids (Root Tab Explore Button, Root Tab Places Button, Search Tab Button)
+  //   B) "Home" tab, buttons with no ids (name = label: Home, Places, Search)
+  // So the iOS locators match either form, inside the tab bar only.
+  private readonly homeTab: PlatformLocator = {
+    android: '~Home',
+    ios: iosTab('name IN {"Root Tab Home Button", "Root Tab Explore Button"} OR label IN {"Home", "Explore"}'),
+  };
+  private readonly searchTab: PlatformLocator = {
+    android: '~Search',
+    ios: iosTab('name == "Search Tab Button" OR label == "Search"'),
+  };
   // Android: the "More" tab. iOS: the profile button in the top bar; both lead to Settings.
   private readonly moreTab: PlatformLocator = { android: '~More', ios: '~profile-button' };
 
@@ -38,11 +53,12 @@ export class HomePage extends BasePage {
   // Items in the "More" menu (Android) or the profile menu (iOS). On iOS Places is a bottom tab.
   private readonly settingsItem: PlatformLocator = {
     android: 'android=new UiSelector().resourceIdMatches(".*:id/main_drawer_settings_container")',
-    ios: '~Profile Settings Row',
+    // Profile sheet row: "Profile Settings Row" in some builds, plain "Settings" button in 2026.10.13.
+    ios: '-ios predicate string:type == "XCUIElementTypeButton" AND name IN {"Profile Settings Row", "Settings"}',
   };
   private readonly placesItem: PlatformLocator = {
     android: 'android=new UiSelector().resourceIdMatches(".*:id/main_drawer_places_container")',
-    ios: '~Root Tab Places Button',
+    ios: iosTab('name == "Root Tab Places Button" OR label == "Places"'),
   };
   // iOS asks in its own alert before the system location prompt.
   private readonly enableLocation: PlatformLocator = { ios: '~Enable location' };
