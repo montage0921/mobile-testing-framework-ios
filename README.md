@@ -62,8 +62,9 @@ npm run test:ios
 ```
 
 The first run builds WebDriverAgent and can take several minutes.
-Page objects need an `ios` locator for every element a test uses; a missing one fails with
-"This locator has no iOS value". Find them with Appium Inspector on the iOS app.
+The iOS locators are the accessibility identifiers the Wikipedia iOS app sets for its own UI tests
+(`WMFComponents/.../AccessibilityIdentifiers.swift` in wikimedia/wikipedia-ios). If an iOS build
+renames one, the failed test's `reports/screenshots/ios_*.xml` shows the current element tree.
 
 ### Run on Perfecto
 

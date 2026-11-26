@@ -21,7 +21,7 @@ describe('Gestures and keyboard', () => {
     await settings.close();
   });
 
-  it('scrolls to an element with a UiScrollable selector', async () => {
+  it('scrolls to an element with the scroll API (UiScrollable, mobile: scroll)', async () => {
     await home.openSettings();
     expect(await settings.isAboutVisible()).toBe(false);
     expect(await settings.scrollToAbout()).toBe(true);
