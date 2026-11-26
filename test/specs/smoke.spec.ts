@@ -9,6 +9,7 @@ import { smokeSearch } from '../support/testData';
  *
  *   npm run test:local      Android emulator on your machine
  *   npm run test:perfecto   Perfecto cloud device
+ *   npm run test:ios        iOS Simulator (macOS)
  */
 describe('Smoke suite', () => {
   const home = new HomePage();

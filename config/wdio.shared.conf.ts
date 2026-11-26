@@ -6,7 +6,7 @@ import './env';
 const screenshotDir = path.resolve(process.cwd(), 'reports', 'screenshots');
 
 /**
- * Settings shared by every run (local Android, BrowserStack Android, BrowserStack iOS).
+ * Settings shared by every run (local Android, Perfecto Android, iOS Simulator).
  * Each platform config spreads this object and adds its own capabilities and services.
  */
 export const sharedConfig: Omit<WebdriverIO.Config, 'capabilities'> = {
@@ -24,12 +24,16 @@ export const sharedConfig: Omit<WebdriverIO.Config, 'capabilities'> = {
     timeout: 120000,
   },
 
-  /** Capture a screenshot whenever a test fails, named after the test. */
+  /**
+   * Capture a screenshot and the page source (element tree XML) whenever a test fails, named after the test.
+   * The XML holds every element's accessibility id, label and type: use it to write missing locators.
+   */
   afterTest: async function (test, _context, { passed }) {
     if (passed) return;
     fs.mkdirSync(screenshotDir, { recursive: true });
     const safeName = test.title.replace(/[^a-z0-9]+/gi, '_').toLowerCase();
-    const platform = browser.isIOS ? 'ios' : 'android';
-    await browser.saveScreenshot(path.join(screenshotDir, `${platform}_${safeName}.png`));
+    const base = path.join(screenshotDir, `${browser.isIOS ? 'ios' : 'android'}_${safeName}`);
+    await browser.saveScreenshot(`${base}.png`);
+    fs.writeFileSync(`${base}.xml`, await browser.getPageSource());
   },
 };
