@@ -1,8 +1,8 @@
 import { $, browser } from '@wdio/globals';
 
 /**
- * A locator per platform. Android is the training focus, so `ios` is optional.
- * Supply the iOS value (from Appium Inspector on the iOS app) and the same page object works.
+ * A locator per platform. Leave a platform out when the element only exists on the other one
+ * (e.g. a one-time promo): tapIfShown skips it there, every other action fails with a clear error.
  *
  * Locator strategies (WebdriverIO selector syntax):
  *   Accessibility ID            '~Search Wikipedia'
@@ -15,18 +15,24 @@ import { $, browser } from '@wdio/globals';
  * they are stable and readable.
  */
 export interface PlatformLocator {
-  android: string;
+  android?: string;
   ios?: string;
 }
 
 export abstract class BasePage {
   /** Pick the locator for the platform the current session is running on. */
   protected pick(locator: PlatformLocator): string {
-    if (browser.isAndroid) return locator.android;
-    if (!locator.ios) {
-      throw new Error('This locator has no iOS value. Add `ios` to the PlatformLocator.');
+    const platform = browser.isAndroid ? 'android' : 'ios';
+    const value = locator[platform];
+    if (!value) {
+      throw new Error(`This locator has no ${platform} value. Add \`${platform}\` to the PlatformLocator.`);
     }
-    return locator.ios;
+    return value;
+  }
+
+  /** Whether the locator has a value for the current platform. */
+  protected has(locator: PlatformLocator): boolean {
+    return !!locator[browser.isAndroid ? 'android' : 'ios'];
   }
 
   protected async find(locator: PlatformLocator) {
@@ -59,9 +65,12 @@ export abstract class BasePage {
     );
   }
 
-  /** Tap an element only if it appears, e.g. a one-time popup. Returns whether it was tapped. */
+  /**
+   * Tap an element only if it appears, e.g. a one-time popup. Returns whether it was tapped.
+   * An element with no locator for this platform never appears.
+   */
   protected async tapIfShown(locator: PlatformLocator, timeoutMs = 3000): Promise<boolean> {
-    if (!(await this.isShown(locator, timeoutMs))) return false;
+    if (!this.has(locator) || !(await this.isShown(locator, timeoutMs))) return false;
     await this.tap(locator);
     return true;
   }

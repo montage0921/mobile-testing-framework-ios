@@ -4,6 +4,7 @@ import { BasePage, PlatformLocator } from './BasePage';
 export class PlacesPage extends BasePage {
   private readonly map: PlatformLocator = {
     android: 'android=new UiSelector().resourceIdMatches(".*:id/mapView")',
+    ios: '-ios class chain:**/XCUIElementTypeMap',
   };
 
   async isMapDisplayed(): Promise<boolean> {

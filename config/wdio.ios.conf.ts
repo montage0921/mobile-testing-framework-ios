@@ -13,10 +13,10 @@ import { sharedConfig } from './wdio.shared.conf';
  */
 const inCI = !!process.env.APPIUM_HOST;
 
-const appPath = process.env.IOS_APP_PATH ?? process.env.APP_PATH ?? requireEnv('IOS_APP_PATH');
-const udid = process.env.IOS_UDID ?? process.env.UDID;
+const appPath = process.env.IOS_APP_PATH || process.env.APP_PATH || requireEnv('IOS_APP_PATH');
+const udid = process.env.IOS_UDID || process.env.UDID;
 const wdaDerivedData =
-  process.env.IOS_WDA_DERIVED_DATA ?? (process.env.USE_PREBUILT_WDA ? process.env.WDA_DERIVED_DATA : undefined);
+  process.env.IOS_WDA_DERIVED_DATA || (process.env.USE_PREBUILT_WDA ? process.env.WDA_DERIVED_DATA : undefined);
 
 export const config: WebdriverIO.Config = {
   ...sharedConfig,
@@ -47,9 +47,9 @@ export const config: WebdriverIO.Config = {
     {
       platformName: 'iOS',
       'appium:automationName': 'XCUITest',
-      'appium:deviceName': process.env.IOS_DEVICE_NAME ?? process.env.DEVICE_NAME ?? optionalEnv('IOS_DEVICE_NAME', 'iPhone 17'),
+      'appium:deviceName': process.env.IOS_DEVICE_NAME || process.env.DEVICE_NAME || optionalEnv('IOS_DEVICE_NAME', 'iPhone 17'),
       'appium:platformVersion':
-        process.env.IOS_PLATFORM_VERSION ?? process.env.PLATFORM_VERSION ?? optionalEnv('IOS_PLATFORM_VERSION', '26.5'),
+        process.env.IOS_PLATFORM_VERSION || process.env.PLATFORM_VERSION || optionalEnv('IOS_PLATFORM_VERSION', '26.5'),
       // Simulator build of the app (a .app folder). Real devices need a signed .ipa instead.
       'appium:app': path.resolve(process.cwd(), appPath),
       // First WebDriverAgent build on a fresh machine is slow.
